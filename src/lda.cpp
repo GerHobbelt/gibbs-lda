@@ -29,23 +29,12 @@ using namespace std;
 void show_help();
 
 int main(int argc, char ** argv) {
+    string dir = "/home/lt/Downloads/GibbsLDA++-0.2/models/test/";
+    string model_name = "model-final";
+    int niters = 1;
     model lda;
-
-    if (lda.init(argc, argv)) {
-	show_help();
-	return 1;
-    }
-    
-    if (lda.model_status == MODEL_STATUS_EST || lda.model_status == MODEL_STATUS_ESTC) {
-	// parameter estimation
-	lda.estimate();
-    }
-    
-    if (lda.model_status == MODEL_STATUS_INF) {
-	// do inference
+    lda.init(dir, model_name, niters);
 	lda.inference();
-    }
-    
     return 0;
 }
 

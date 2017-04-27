@@ -1,3 +1,4 @@
 .idea/vcs.xml
-cmake-build-debug/*
-models/*
+cmake-build-debug
+models
+.idea

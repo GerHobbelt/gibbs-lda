@@ -33,7 +33,7 @@ class model;
 class utils {
 public:
     // parse command line arguments
-    static int parse_args(int argc, char ** argv, model * pmodel);
+    static int parse_args(string datadir, string modelname, int num_iterations, model * pmodel);
     
     // read and parse model parameters from <model_name>.others
     static int read_and_parse(string filename, model * model); 

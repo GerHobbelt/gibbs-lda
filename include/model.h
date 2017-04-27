@@ -106,10 +106,10 @@ public:
     void set_default_values();   
 
     // parse command line to get options
-    int parse_args(int argc, char ** argv);
+    int parse_args(string datadir, string modelname, int num_iterations);
     
     // initialize the model
-    int init(int argc, char ** argv);
+    int init(string datadir, string modelname, int num_iterations);
     
     // load LDA model to continue estimating or to do inference
     int load_model(string model_name);
@@ -134,15 +134,15 @@ public:
     int save_inf_model_others(string filename);
     int save_inf_model_twords(string filename);
     
-    // init for estimation
-    int init_est();
-    int init_estc();
-	
-    // estimate LDA model using Gibbs sampling
-    void estimate();
-    int sampling(int m, int n);
-    void compute_theta();
-    void compute_phi();
+//    // init for estimation
+//    int init_est();
+//    int init_estc();
+//
+//    // estimate LDA model using Gibbs sampling
+//    void estimate();
+//    int sampling(int m, int n);
+//    void compute_theta();
+//    void compute_phi();
     
     // init for inference
     int init_inf();
