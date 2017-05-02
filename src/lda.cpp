@@ -28,7 +28,7 @@ using namespace std;
 
 void show_help();
 
-int main(int argc, char ** argv) {
+int main() {
     string dir = "/home/lt/Downloads/GibbsLDA++-0.2/models/test/";
     string model_name = "model-final";
     int niters = 1;
@@ -37,12 +37,3 @@ int main(int argc, char ** argv) {
 	lda.inference();
     return 0;
 }
-
-void show_help() {
-    printf("Command line usage:\n");
-    printf("\tlda -est -alpha <double> -beta <double> -ntopics <int> -niters <int> -savestep <int> -twords <int> -dfile <string>\n");
-    printf("\tlda -estc -dir <string> -model <string> -niters <int> -savestep <int> -twords <int>\n");
-    printf("\tlda -inf -dir <string> -model <string> -niters <int> -twords <int> -dfile <string>\n");
-    // printf("\tlda -inf -dir <string> -model <string> -niters <int> -twords <int> -dfile <string> -withrawdata\n");
-}
-

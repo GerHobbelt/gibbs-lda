@@ -200,35 +200,49 @@ void model::set_default_values() {
     newphi = NULL;
 }
 
-int model::parse_args(string datadir, string modelname, int num_iterations) {
-    return utils::parse_args(datadir, modelname, num_iterations, this);
-}
-
 int model::init(string datadir, string modelname, int num_iterations) {
-    // call parse_args
-    if (parse_args(datadir, modelname, num_iterations)) {
-	return 1;
+    utils::parse_args(datadir, modelname, num_iterations, this);
+    int model_status = MODEL_STATUS_INF;
+    string dfile = "trndocsnew.txt";
+    int niters = num_iterations;
+    int twords = 20;
+    int withrawdata = 0;
+    if (dir == "") {
+        printf("Please specify model directory please!\n");
+        return 1;
     }
-
-//    if (model_status == MODEL_STATUS_EST) {
-//	// estimating the model from scratch
-//	if (init_est()) {
-//	    return 1;
-//	}
-//
-//    } else if (model_status == MODEL_STATUS_ESTC) {
-//	// estimating the model from a previously estimated one
-//	if (init_estc()) {
-//	    return 1;
-//	}
-
-//    } else if (model_status == MODEL_STATUS_INF) {
-	// do inference
-	if (init_inf()) {
-	    return 1;
-	}
-//    }
-
+    if (model_name == "") {
+        printf("Please specify model name for inference!\n");
+        return 1;
+    }
+    if (dfile == "") {
+        printf("Please specify the new data file for inference!\n");
+        return 1;
+    }
+    this->model_status = model_status;
+    if (dir[dir.size() - 1] != '/') {
+        dir += "/";
+    }
+    this->dir = dir;
+    this->model_name = model_name;
+    this->dfile = dfile;
+    if (niters > 0) {
+        this->niters = niters;
+    } else {
+        // default number of Gibbs sampling iterations for doing inference
+        this->niters = 20;
+    }
+    if (twords > 0) {
+        this->twords = twords;
+    }
+    if (withrawdata > 0) {
+        this->withrawstrs = withrawdata;
+    }
+    // read <model>.others file to assign values for ntopics, alpha, beta, etc.
+    if (utils::read_and_parse(this->dir + this->model_name + this->others_suffix, this)) {
+        return 1;
+    }
+	init_inf();
     return 0;
 }
 
