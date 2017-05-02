@@ -84,6 +84,7 @@ public:
     double ** phi; // phi: topic-word distributions, size K x V
     
     // for inference only
+    map<string, int> mapword2id;
     int inf_liter;
     int newM;
     int newV;
@@ -141,15 +142,17 @@ public:
 //    // estimate LDA model using Gibbs sampling
 //    void estimate();
 //    int sampling(int m, int n);
-//    void compute_theta();
-//    void compute_phi();
+    void compute_theta();
+    void compute_phi();
+    std::vector<std::vector<double>> get_phi();
     
     // init for inference
     int init_inf();
     // inference for new (unseen) data based on the estimated LDA model
-    void inference();
+    std::vector<double> get_topicdistribution(std::string clickstream);
     int inf_sampling(int m, int n);
     void compute_newtheta();
+    std::vector<double> get_newtheta();
     void compute_newphi();
 };
 

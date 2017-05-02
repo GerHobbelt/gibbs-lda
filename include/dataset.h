@@ -170,6 +170,7 @@ public:
     
     int read_trndata(string dfile, string wordmapfile);
     int read_newdata(string dfile, string wordmapfile);
+    int read_newdata_new(map<string, int> mapword2id, std::string clickstream);
     int read_newdata_withrawstrs(string dfile, string wordmapfile);
 };
 
