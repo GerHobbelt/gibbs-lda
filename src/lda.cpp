@@ -1,26 +1,4 @@
-/*
- * Copyright (C) 2007 by
- * 
- * 	Xuan-Hieu Phan
- *	hieuxuan@ecei.tohoku.ac.jp or pxhieu@gmail.com
- * 	Graduate School of Information Sciences
- * 	Tohoku University
- *
- * GibbsLDA++ is a free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published
- * by the Free Software Foundation; either version 2 of the License,
- * or (at your option) any later version.
- *
- * GibbsLDA++ is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GibbsLDA++; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
- */
-
+#include <chrono>
 #include "lda.hpp"
 
 void GibbsRecommender::InitRecommender() {
@@ -74,10 +52,10 @@ std::vector<std::string> GibbsRecommender::GetRecommendation(std::vector<std::st
     }
     std::vector<double> n_gamma = ldamodel.get_topicdistribution(clickstream_string);
     std::vector<std::vector<double>> lambda = ldamodel.get_phi();
-    std::cout << n_gamma.size() << ", " << lambda.size() << "*" << lambda[0].size() << std::endl;
+//    std::cout << n_gamma.size() << ", " << lambda.size() << "*" << lambda[0].size() << std::endl;
     std::vector<double> pw_q;
     calcPw_q(lambda, n_gamma, pw_q);
-    std::cout << pw_q.size() << std::endl;
+//    std::cout << pw_q.size() << std::endl;
     std::map<std::size_t,double> pmfHist;
     std::map<std::string,double> histo;
     for(std::size_t idx(0); idx < pw_q.size(); idx++)
@@ -103,9 +81,15 @@ std::vector<std::string> GibbsRecommender::GetRecommendation(std::vector<std::st
 int main() {
     GibbsRecommender GR;
     GR.InitRecommender();
-    std::vector<std::string> rec = GR.GetRecommendation({"lawyer", "pregnant"}, 10);
+    std::chrono::steady_clock::time_point recommendation_query, recommendation_get;
+    recommendation_query = std::chrono::steady_clock::now();
+    std::vector<std::string> rec = GR.GetRecommendation({"cancer", "week"}, 5);
+    recommendation_get = std::chrono::steady_clock::now();
+    auto rec_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(recommendation_get -
+                                                                                    recommendation_query).count();
+    std::cout << "Recommendations:";
     for (auto r: rec) {
         std::cout << r << ",";
     }
-    std::cout << std::endl;
+    std::cout << ", Rec time(ms):" << rec_seconds <<std::endl;
 }

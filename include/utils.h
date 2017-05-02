@@ -25,15 +25,19 @@
 #define _UTILS_H
 
 #include <string>
-
-using namespace std;
+#include <stdio.h>
+#include <string>
+#include <map>
+#include "../include/strtokenizer.h"
+#include "../include/utils.h"
+#include "../include/model.h"
 
 class model;
 
 class utils {
 public:
     // parse command line arguments
-    static int parse_args(string datadir, string modelname, int num_iterations, model * pmodel);
+    static int parse_args(const std::string &datadir, const std::string &modelname, int num_iterations, model * pmodel);
     
     // read and parse model parameters from <model_name>.others
     static int read_and_parse(string filename, model * model); 

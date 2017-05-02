@@ -188,7 +188,7 @@ int dataset::read_trndata(string dfile, string wordmapfile) {
 }
 
 int dataset::read_newdata(string dfile, string wordmapfile) {
-    std::cout << "reading new data" << std::endl;
+//    std::cout << "reading new data" << std::endl;
     mapword2id word2id;
     map<int, int> id2_id;
     
@@ -276,7 +276,7 @@ int dataset::read_newdata(string dfile, string wordmapfile) {
 
 
 int dataset::read_newdata_new(map<string, int> word2id, std::string clickstream) {
-    std::cout << "reading new data" << std::endl;
+//    std::cout << "reading new data" << std::endl;
     map<int, int> id2_id;
 
     mapword2id::iterator it;
@@ -284,7 +284,7 @@ int dataset::read_newdata_new(map<string, int> word2id, std::string clickstream)
 
     // get number of new documents
     M = 1;
-    std::cout << "M:" << M << std::endl;
+//    std::cout << "M:" << M << std::endl;
     if (M <= 0) {
         printf("No document available!\n");
         return 1;

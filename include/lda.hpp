@@ -17,7 +17,6 @@ class GibbsRecommender {
 public:
     void InitRecommender();
     std::vector<std::string> GetRecommendation(std::vector<std::string> clickstream, int numRec);
-    int main();
 
 private:
     model ldamodel;

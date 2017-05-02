@@ -35,7 +35,6 @@
 #include "constants.h"
 #include "dataset.h"
 
-using namespace std;
 
 // LDA model
 class model {
@@ -110,7 +109,7 @@ public:
     int parse_args(string datadir, string modelname, int num_iterations);
     
     // initialize the model
-    int init(string datadir, string modelname, int num_iterations);
+    int init(const std::string &datadir, const std::string &modelname, int num_iterations);
     
     // load LDA model to continue estimating or to do inference
     int load_model(string model_name);

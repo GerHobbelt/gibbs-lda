@@ -200,7 +200,7 @@ void model::set_default_values() {
     newphi = NULL;
 }
 
-int model::init(string datadir, string modelname, int num_iterations) {
+int model::init(const std::string &datadir, const std::string &modelname, int num_iterations) {
     utils::parse_args(datadir, modelname, num_iterations, this);
     int model_status = MODEL_STATUS_INF;
     string dfile = "trndocsnew.txt";
@@ -449,31 +449,6 @@ int model::save_model_twords(string filename) {
     return 0;
 }
 
-int model::save_inf_model(string model_name) {
-    if (save_inf_model_tassign(dir + model_name + tassign_suffix)) {
-        return 1;
-    }
-
-    if (save_inf_model_others(dir + model_name + others_suffix)) {
-        return 1;
-    }
-
-    if (save_inf_model_newtheta(dir + model_name + theta_suffix)) {
-        return 1;
-    }
-
-    if (save_inf_model_newphi(dir + model_name + phi_suffix)) {
-        return 1;
-    }
-
-    if (twords > 0) {
-        if (save_inf_model_twords(dir + model_name + twords_suffix)) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
 
 int model::save_inf_model_tassign(string filename) {
     int i, j;
@@ -600,252 +575,6 @@ int model::save_inf_model_twords(string filename) {
 }
 
 
-//int model::init_est() {
-//    int m, n, w, k;
-//
-//    p = new double[K];
-//
-//    // + read training data
-//    ptrndata = new dataset;
-//    if (ptrndata->read_trndata(dir + dfile, dir + wordmapfile)) {
-//        printf("Fail to read training data!\n");
-//        return 1;
-//    }
-//
-//    // + allocate memory and assign values for variables
-//    M = ptrndata->M;
-//    V = ptrndata->V;
-//    // K: from command line or default value
-//    // alpha, beta: from command line or default values
-//    // niters, savestep: from command line or default values
-//
-//    nw = new int*[V];
-//    for (w = 0; w < V; w++) {
-//        nw[w] = new int[K];
-//        for (k = 0; k < K; k++) {
-//    	    nw[w][k] = 0;
-//        }
-//    }
-//
-//    nd = new int*[M];
-//    for (m = 0; m < M; m++) {
-//        nd[m] = new int[K];
-//        for (k = 0; k < K; k++) {
-//    	    nd[m][k] = 0;
-//        }
-//    }
-//
-//    nwsum = new int[K];
-//    for (k = 0; k < K; k++) {
-//	nwsum[k] = 0;
-//    }
-//
-//    ndsum = new int[M];
-//    for (m = 0; m < M; m++) {
-//	ndsum[m] = 0;
-//    }
-//
-//    srandom(time(0)); // initialize for random number generation
-//    z = new int*[M];
-//    for (m = 0; m < ptrndata->M; m++) {
-//	int N = ptrndata->docs[m]->length;
-//	z[m] = new int[N];
-//
-//        // initialize for z
-//        for (n = 0; n < N; n++) {
-//    	    int topic = (int)(((double)random() / RAND_MAX) * K);
-//    	    z[m][n] = topic;
-//
-//    	    // number of instances of word i assigned to topic j
-//    	    nw[ptrndata->docs[m]->words[n]][topic] += 1;
-//    	    // number of words in document i assigned to topic j
-//    	    nd[m][topic] += 1;
-//    	    // total number of words assigned to topic j
-//    	    nwsum[topic] += 1;
-//        }
-//        // total number of words in document i
-//        ndsum[m] = N;
-//    }
-//
-//    theta = new double*[M];
-//    for (m = 0; m < M; m++) {
-//        theta[m] = new double[K];
-//    }
-//
-//    phi = new double*[K];
-//    for (k = 0; k < K; k++) {
-//        phi[k] = new double[V];
-//    }
-//
-//    return 0;
-//}
-
-//int model::init_estc() {
-//    // estimating the model from a previously estimated one
-//    int m, n, w, k;
-//
-//    p = new double[K];
-//
-//    // load moel, i.e., read z and ptrndata
-//    if (load_model(model_name)) {
-//	printf("Fail to load word-topic assignmetn file of the model!\n");
-//	return 1;
-//    }
-//
-//    nw = new int*[V];
-//    for (w = 0; w < V; w++) {
-//        nw[w] = new int[K];
-//        for (k = 0; k < K; k++) {
-//    	    nw[w][k] = 0;
-//        }
-//    }
-//
-//    nd = new int*[M];
-//    for (m = 0; m < M; m++) {
-//        nd[m] = new int[K];
-//        for (k = 0; k < K; k++) {
-//    	    nd[m][k] = 0;
-//        }
-//    }
-//
-//    nwsum = new int[K];
-//    for (k = 0; k < K; k++) {
-//	nwsum[k] = 0;
-//    }
-//
-//    ndsum = new int[M];
-//    for (m = 0; m < M; m++) {
-//	ndsum[m] = 0;
-//    }
-//
-//    for (m = 0; m < ptrndata->M; m++) {
-//	int N = ptrndata->docs[m]->length;
-//
-//	// assign values for nw, nd, nwsum, and ndsum
-//        for (n = 0; n < N; n++) {
-//    	    int w = ptrndata->docs[m]->words[n];
-//    	    int topic = z[m][n];
-//
-//    	    // number of instances of word i assigned to topic j
-//    	    nw[w][topic] += 1;
-//    	    // number of words in document i assigned to topic j
-//    	    nd[m][topic] += 1;
-//    	    // total number of words assigned to topic j
-//    	    nwsum[topic] += 1;
-//        }
-//        // total number of words in document i
-//        ndsum[m] = N;
-//    }
-//
-//    theta = new double*[M];
-//    for (m = 0; m < M; m++) {
-//        theta[m] = new double[K];
-//    }
-//
-//    phi = new double*[K];
-//    for (k = 0; k < K; k++) {
-//        phi[k] = new double[V];
-//    }
-//
-//    return 0;
-//}
-//
-//void model::estimate() {
-//    if (twords > 0) {
-//	// print out top words per topic
-//	dataset::read_wordmap(dir + wordmapfile, &id2word);
-//    }
-//
-//    printf("Sampling %d iterations!\n", niters);
-//
-//    int last_iter = liter;
-//    for (liter = last_iter + 1; liter <= niters + last_iter; liter++) {
-//	printf("Iteration %d ...\n", liter);
-//
-//	// for all z_i
-//	for (int m = 0; m < M; m++) {
-//	    for (int n = 0; n < ptrndata->docs[m]->length; n++) {
-//		// (z_i = z[m][n])
-//		// sample from p(z_i|z_-i, w)
-//		int topic = sampling(m, n);
-//		z[m][n] = topic;
-//	    }
-//	}
-//
-//	if (savestep > 0) {
-//	    if (liter % savestep == 0) {
-//		// saving the model
-//		printf("Saving the model at iteration %d ...\n", liter);
-//		compute_theta();
-//		compute_phi();
-//		save_model(utils::generate_model_name(liter));
-//	    }
-//	}
-//    }
-//
-//    printf("Gibbs sampling completed!\n");
-//    printf("Saving the final model!\n");
-//    compute_theta();
-//    compute_phi();
-//    liter--;
-//    save_model(utils::generate_model_name(-1));
-//}
-//
-//int model::sampling(int m, int n) {
-//    // remove z_i from the count variables
-//    int topic = z[m][n];
-//    int w = ptrndata->docs[m]->words[n];
-//    nw[w][topic] -= 1;
-//    nd[m][topic] -= 1;
-//    nwsum[topic] -= 1;
-//    ndsum[m] -= 1;
-//
-//    double Vbeta = V * beta;
-//    double Kalpha = K * alpha;
-//    // do multinomial sampling via cumulative method
-//    for (int k = 0; k < K; k++) {
-//	p[k] = (nw[w][k] + beta) / (nwsum[k] + Vbeta) *
-//		    (nd[m][k] + alpha) / (ndsum[m] + Kalpha);
-//    }
-//    // cumulate multinomial parameters
-//    for (int k = 1; k < K; k++) {
-//	p[k] += p[k - 1];
-//    }
-//    // scaled sample because of unnormalized p[]
-//    double u = ((double)random() / RAND_MAX) * p[K - 1];
-//
-//    for (topic = 0; topic < K; topic++) {
-//	if (p[topic] > u) {
-//	    break;
-//	}
-//    }
-//
-//    // add newly estimated z_i to count variables
-//    nw[w][topic] += 1;
-//    nd[m][topic] += 1;
-//    nwsum[topic] += 1;
-//    ndsum[m] += 1;
-//
-//    return topic;
-//}
-//
-void model::compute_theta() {
-    for (int m = 0; m < M; m++) {
-	for (int k = 0; k < K; k++) {
-	    theta[m][k] = (nd[m][k] + alpha) / (ndsum[m] + K * alpha);
-	}
-    }
-}
-
-void model::compute_phi() {
-    for (int k = 0; k < K; k++) {
-	for (int w = 0; w < V; w++) {
-	    phi[k][w] = (nw[w][k] + beta) / (nwsum[k] + V * beta);
-	}
-    }
-}
-
-
 int read_wordmap(string wordmapfile, mapword2id *pword2id) {
     pword2id->clear();
 
@@ -880,7 +609,7 @@ int read_wordmap(string wordmapfile, mapword2id *pword2id) {
 
 
 int model::init_inf() {
-    std::cout << "Initializing the inference" << std::endl;
+    std::cout << "Initializing the recommender" << std::endl;
     // estimating the model from a previously estimated one
     int m, n, w, k;
 
@@ -937,7 +666,7 @@ int model::init_inf() {
         ndsum[m] = N;
     }
 
-    std::cout << "m:" << m << ", n:" << n << ", w:" << w << ", k:" << k << std::endl;
+//    std::cout << "m:" << m << ", n:" << n << ", w:" << w << ", k:" << k << std::endl;
     // read new data for inference
     pnewdata = new dataset;
     read_wordmap(dir + wordmapfile, &mapword2id);
@@ -951,8 +680,8 @@ int model::init_inf() {
 std::vector<double> model::get_topicdistribution(std::string clickstream) {
     int m, n, w, k;
     pnewdata->read_newdata_new(mapword2id, clickstream);
-    std::cout << "pnewdata::M: " << pnewdata->M << std::endl;
-    std::cout << "pnewdata::V: " << pnewdata->V << std::endl;
+//    std::cout << "pnewdata::M: " << pnewdata->M << std::endl;
+//    std::cout << "pnewdata::V: " << pnewdata->V << std::endl;
     newM = pnewdata->M;
     newV = pnewdata->V;
     newnw = new int *[newV];
@@ -981,14 +710,14 @@ std::vector<double> model::get_topicdistribution(std::string clickstream) {
     newz = new int *[newM];
     for (m = 0; m < pnewdata->M; m++) {
         int N = pnewdata->docs[m]->length;
-        std::cout << "pnewdata->docs[m]->length: " << pnewdata->docs[m]->length << std::endl;
+//        std::cout << "pnewdata->docs[m]->length: " << pnewdata->docs[m]->length << std::endl;
         newz[m] = new int[N];
         // assign values for nw, nd, nwsum, and ndsum
         for (n = 0; n < N; n++) {
             int w = pnewdata->docs[m]->words[n];
             int _w = pnewdata->_docs[m]->words[n];
-            std::cout << "pnewdata->docs[m]->words[n]: " << "m:" << m << ", n:" << n << " w:" << w << ", _w:" << _w
-                      << std::endl;
+//            std::cout << "pnewdata->docs[m]->words[n]: " << "m:" << m << ", n:" << n << " w:" << w << ", _w:" << _w
+//                      << std::endl;
             int topic = (int) (((double) random() / RAND_MAX) * K);
             newz[m][n] = topic;
             // number of instances of word i assigned to topic j
@@ -1013,9 +742,9 @@ std::vector<double> model::get_topicdistribution(std::string clickstream) {
         // print out top words per topic
         dataset::read_wordmap(dir + wordmapfile, &id2word);
     }
-    printf("Sampling %d iterations for inference!\n", niters);
+//    std::cout << "Sampling %d iterations for inference!\n" << niters << std::endl;
     for (inf_liter = 1; inf_liter <= niters; inf_liter++) {
-        printf("Iteration %d ...\n", inf_liter);
+//        std::cout << "Iteration :" << inf_liter << std::endl;
         // for all newz_i , loop through all new documents
         for (int m = 0; m < newM; m++) {
             for (int n = 0; n < pnewdata->docs[m]->length; n++) {
@@ -1024,7 +753,7 @@ std::vector<double> model::get_topicdistribution(std::string clickstream) {
                 // sample from p(z_i|z_-i, w)
                 int topic = inf_sampling(m, n);
                 newz[m][n] = topic;
-                std::cout << m << ", " << n << ", " << topic << std::endl;
+//                std::cout << m << ", " << n << ", " << topic << std::endl;
             }
         }
     }
@@ -1071,14 +800,6 @@ int model::inf_sampling(int m, int n) {
     return topic;
 }
 
-void model::compute_newtheta() {
-    for (int m = 0; m < newM; m++) {
-        for (int k = 0; k < K; k++) {
-            newtheta[m][k] = (newnd[m][k] + alpha) / (newndsum[m] + K * alpha);
-        }
-    }
-}
-
 std::vector<double> model::get_newtheta() {
     std::vector<double> newtheta;
     for (int m = 0; m < newM; m++) {
@@ -1099,17 +820,5 @@ std::vector<std::vector<double>> model::get_phi() {
         }
     }
     return lambda;
-}
-
-void model::compute_newphi() {
-    map<int, int>::iterator it;
-    for (int k = 0; k < K; k++) {
-        for (int w = 0; w < newV; w++) {
-            it = pnewdata->_id2id.find(w);
-            if (it != pnewdata->_id2id.end()) {
-                newphi[k][w] = (nw[it->second][k] + newnw[w][k] + beta) / (nwsum[k] + newnwsum[k] + V * beta);
-            }
-        }
-    }
 }
 
