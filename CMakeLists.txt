@@ -20,7 +20,7 @@ find_package(Boost 1.58	COMPONENTS
         unit_test_framework
         REQUIRED)
 include_directories(./include ${Boost_INCLUDE_DIRS})
-set(SRCS ./src/lda.cpp ./src/dataset.cpp ./src/model.cpp ./src/strtokenizer.cpp ./src/utils.cpp)
+set(SRCS ./src/ldainfer_gibbs.cpp ./src/dataset.cpp ./src/model.cpp ./src/strtokenizer.cpp ./src/utils.cpp)
 add_executable(GIBBSLDA ${SRCS})
 target_link_libraries(GIBBSLDA ${Boost_CXX_Driver_LIBRARIES})
 
