@@ -21,12 +21,24 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
+#ifndef _MEMLIM_H
+#define _MEMLIM_H
+
+#define MAX_MEM 300000
+
+#endif
+
 #ifndef	_DATASET_H
 #define	_DATASET_H
-
+#include <iostream>
 #include <string>
 #include <vector>
 #include <map>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/string.hpp>
+#include <fstream>
 
 using namespace std;
 
@@ -37,95 +49,90 @@ typedef map<int, string> mapid2word;
 
 class document {
 public:
-    int * words;
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive &ar, const unsigned int versin){
+       ar & words;
+       ar & rawstr;
+       ar & length; 
+    }
+    vector<int> words;
+    //int * words;
     string rawstr;
     int length;
     
-    document() {
-	words = NULL;
+    document():words() {
+	//words = NULL;
 	rawstr = "";
 	length = 0;	
     }
     
-    document(int length) {
+    document(int length):words(length,0) {
 	this->length = length;
 	rawstr = "";
-	words = new int[length];	
+	//words = new int[length];	
     }
     
-    document(int length, int * words) {
+    document(int length, vector<int> words) {
 	this->length = length;
 	rawstr = "";
-	this->words = new int[length];
-	for (int i = 0; i < length; i++) {
-	    this->words[i] = words[i];
-	}
+	this->words = words;
     }
 
-    document(int length, int * words, string rawstr) {
+    document(int length, vector<int> words, string rawstr) {
 	this->length = length;
 	this->rawstr = rawstr;
-	this->words = new int[length];
-	for (int i = 0; i < length; i++) {
-	    this->words[i] = words[i];
-	}
+	this->words = words; 
     }
     
     document(vector<int> & doc) {
 	this->length = doc.size();
 	rawstr = "";
-	this->words = new int[length];
-	for (int i = 0; i < length; i++) {
-	    this->words[i] = doc[i];
-	}
+	this->words = doc;
     }
 
     document(vector<int> & doc, string rawstr) {
 	this->length = doc.size();
 	this->rawstr = rawstr;
-	this->words = new int[length];
-	for (int i = 0; i < length; i++) {
-	    this->words[i] = doc[i];
-	}
+	this->words = doc;
     }
     
     ~document() {
-	if (words) {
-	    delete words;
-	}
     }
 };
 
 class dataset {
 public:
-    document ** docs;
+    vector<string> file_names;
+    vector<int> start_index;
+    vector<document> docs;
     document ** _docs; // used only for inference
     map<int, int> _id2id; // also used only for inference
     int M; // number of documents
     int V; // number of words
+    int cur_size;
+    int cur_index;//index the position in file_names
+    string dir;
     
-    dataset() {
-	docs = NULL;
+    dataset():docs(),file_names(),start_index(),dir() {
+	//docs = NULL;
 	_docs = NULL;
 	M = 0;
 	V = 0;
+        cur_size = 0;
+        cur_index = 0;
     }
     
-    dataset(int M) {
+    dataset(int M):docs(),file_names(),start_index(),dir() {
 	this->M = M;
 	this->V = 0;
-	docs = new document*[M];	
+	//docs = new document*[M];	
+        cur_size = 0;
+        cur_index = 0;
 	_docs = NULL;
     }   
     
     ~dataset() {
-	if (docs) {
-	    for (int i = 0; i < M; i++) {
-		delete docs[i];
-	    }
-	}
-	delete docs;
-	
 	if (_docs) {
 	    for (int i = 0; i < M; i++) {
 		delete _docs[i];		
@@ -135,14 +142,6 @@ public:
     }
     
     void deallocate() {
-	if (docs) {
-	    for (int i = 0; i < M; i++) {
-		delete docs[i];
-	    }
-	}
-	delete docs;
-	docs = NULL;
-
 	if (_docs) {
 	    for (int i = 0; i < M; i++) {
 		delete _docs[i];
@@ -151,10 +150,68 @@ public:
 	delete _docs;
 	_docs = NULL;
     }
-    
-    void add_doc(document * doc, int idx) {
+
+    bool write_to_disk(int index){
+      ofstream ofs;//(file_names[index]);//(file_names.back()) ;
+      ofs.open(file_names[index], ofstream::out|ofstream::trunc);
+      boost::archive::text_oarchive oa(ofs);
+      oa << docs; 
+      ofs.close();
+      return true;
+    }
+     
+    bool read_from_disk(int index){
+       /*
+        *for the data part no need to write before read new, bc data never changes
+       if(cur_index < start_index.size()){
+         //the last write increase the cur_index out of range
+         write_to_disk(cur_index);
+       }*/
+       ifstream ifs(file_names[index]);
+       boost::archive::text_iarchive ia(ifs);
+       docs.clear();
+       ia >> docs;
+       cur_size = docs.size();
+       cur_index = index;
+       return true;
+    }
+
+    document& get_docs(int idx) {
+       //required doc in memory
+       if(!(cur_index < start_index.size() && idx >= start_index[cur_index] &&
+          (cur_index==start_index.size()-1||idx<start_index[cur_index+1]))){
+          int start = 0;
+          int end = start_index.size()-1; 
+          while(start + 1 < end){
+            int mid = start + ((end-start)>>1);
+            if(idx < start_index[mid]){
+              end = mid;
+            }else{
+              start = mid;
+            }
+          }
+          int dex = (idx>=start_index[end])?end:start;
+          read_from_disk(dex); 
+       }   
+           
+       return docs[idx-start_index[cur_index]];
+    }
+
+    void add_doc(document &doc, int idx) {
 	if (0 <= idx && idx < M) {
-	    docs[idx] = doc;
+            if(docs.empty()){
+              start_index.push_back(idx);
+            }
+	    docs.push_back(doc);
+            cur_size++;
+            //store into hard disk if full  
+            if(docs.size() > MAX_MEM/4){
+              file_names.push_back(dir+"data_"+std::to_string(cur_index)+".data"); 
+              write_to_disk(cur_index); 
+              docs.clear();
+              cur_size = 0;
+              cur_index++; 
+            }      
 	}
     }   
     

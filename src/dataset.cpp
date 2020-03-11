@@ -21,6 +21,7 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include "constants.h"
@@ -133,11 +134,11 @@ int dataset::read_trndata(string dfile, string wordmapfile) {
     }
     
     // allocate memory for corpus
-    if (docs) {
+    /*if (docs) {
 	deallocate();
     } else {
 	docs = new document*[M];
-    }
+    }*/
     
     // set number of words to zero
     V = 0;
@@ -156,16 +157,16 @@ int dataset::read_trndata(string dfile, string wordmapfile) {
 	}
 	
 	// allocate new document
-	document * pdoc = new document(length);
+	document  pdoc = document(length);
 	
 	for (int j = 0; j < length; j++) {
 	    it = word2id.find(strtok.token(j));
 	    if (it == word2id.end()) {
 		// word not found, i.e., new word
-		pdoc->words[j] = word2id.size();
+		pdoc.words[j] = word2id.size();
 		word2id.insert(pair<string, int>(strtok.token(j), word2id.size()));
 	    } else {
-		pdoc->words[j] = it->second;
+		pdoc.words[j] = it->second;
 	    }
 	}
 	
@@ -173,8 +174,15 @@ int dataset::read_trndata(string dfile, string wordmapfile) {
 	add_doc(pdoc, i);
     }
     
-    fclose(fin);
+    if(docs.size() > 0){
+      file_names.push_back(dir+"data_"+std::to_string(cur_index)+".data");
+      write_to_disk(cur_index);
+      docs.clear();
+      cur_size = 0;
+      cur_index++; 
+    }
     
+    fclose(fin);
     // write word map to file
     if (write_wordmap(wordmapfile, &word2id)) {
 	return 1;
@@ -187,6 +195,7 @@ int dataset::read_trndata(string dfile, string wordmapfile) {
 }
 
 int dataset::read_newdata(string dfile, string wordmapfile) {
+    //for unseen data
     mapword2id word2id;
     map<int, int> id2_id;
     
@@ -216,11 +225,11 @@ int dataset::read_newdata(string dfile, string wordmapfile) {
     }
     
     // allocate memory for corpus
-    if (docs) {
+    /*if (docs) {
 	deallocate();
     } else {
 	docs = new document*[M];
-    }
+    }*/
     _docs = new document*[M];
     
     // set number of words to zero
@@ -256,7 +265,7 @@ int dataset::read_newdata(string dfile, string wordmapfile) {
 	}
 	
 	// allocate memory for new doc
-	document * pdoc = new document(doc);
+	document  pdoc = document(doc);
 	document * _pdoc = new document(_doc);
 	
 	// add new doc
@@ -302,11 +311,11 @@ int dataset::read_newdata_withrawstrs(string dfile, string wordmapfile) {
     }
     
     // allocate memory for corpus
-    if (docs) {
+    /*if (docs) {
 	deallocate();
     } else {
 	docs = new document*[M];
-    }
+    }*/
     _docs = new document*[M];
     
     // set number of words to zero
@@ -342,7 +351,7 @@ int dataset::read_newdata_withrawstrs(string dfile, string wordmapfile) {
 	}
 	
 	// allocate memory for new doc
-	document * pdoc = new document(doc, line);
+	document  pdoc = document(doc, line);
 	document * _pdoc = new document(_doc, line);
 	
 	// add new doc
