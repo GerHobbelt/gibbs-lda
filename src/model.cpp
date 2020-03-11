@@ -28,7 +28,7 @@
  * + "Parameter estimation for text analysis" by Gregor Heinrich
  *   http://www.arbylon.net/publications/text-est.pdf
  */
-
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -53,13 +53,13 @@ model::~model() {
 	delete pnewdata;
     }
 
-    if (z) {
+    /*if (z) {
 	for (int m = 0; m < M; m++) {
 	    if (z[m]) {
 		delete z[m];
 	    }
 	}
-    }
+    }*/
     
     if (nw) {
 	for (int w = 0; w < V; w++) {
@@ -69,13 +69,13 @@ model::~model() {
 	}
     }
 
-    if (nd) {
+    /*if (nd) {
 	for (int m = 0; m < M; m++) {
 	    if (nd[m]) {
 		delete nd[m];
 	    }
 	}
-    } 
+    } */
     
     if (nwsum) {
 	delete nwsum;
@@ -85,13 +85,13 @@ model::~model() {
 	delete ndsum;
     }
     
-    if (theta) {
+    /*if (theta) {
 	for (int m = 0; m < M; m++) {
 	    if (theta[m]) {
 		delete theta[m];
 	    }
 	}
-    }
+    }*/
     
     if (phi) {
 	for (int k = 0; k < K; k++) {
@@ -180,12 +180,18 @@ void model::set_default_values() {
     withrawstrs = 0;
     
     p = NULL;
-    z = NULL;
+    //z = NULL;
+    z_cur_size = 0;
+    z_cur_index = 0; 
     nw = NULL;
-    nd = NULL;
+    //nd = NULL;
+    nd_cur_size = 0;
+    nd_cur_index = 0;
     nwsum = NULL;
     ndsum = NULL;
-    theta = NULL;
+    //theta = NULL;
+    theta_cur_size = 0;
+    theta_cur_index = 0;
     phi = NULL;
     
     newM = 0;
@@ -245,7 +251,8 @@ int model::load_model(string model_name) {
     string line;
 
     // allocate memory for z and ptrndata
-    z = new int*[M];
+    //z = new int*[M];
+    //z = vector<vector<int> >(M);
     ptrndata = new dataset(M);
     ptrndata->V = V;
 
@@ -276,13 +283,14 @@ int model::load_model(string model_name) {
 	}
 	
 	// allocate and add new document to the corpus
-	document * pdoc = new document(words);
+	document  pdoc = document(words);
 	ptrndata->add_doc(pdoc, i);
 	
 	// assign values for z
-	z[i] = new int[topics.size()];
+	//z[i] = new int[topics.size()];
+        get_z(i) = vector<int>(topics.size());
 	for (j = 0; j < topics.size(); j++) {
-	    z[i][j] = topics[j];
+	    get_z(i)[j] = topics[j];
 	}
     }   
     
@@ -295,7 +303,6 @@ int model::save_model(string model_name) {
     if (save_model_tassign(dir + model_name + tassign_suffix)) {
 	return 1;
     }
-    
     if (save_model_others(dir + model_name + others_suffix)) {
 	return 1;
     }
@@ -328,8 +335,8 @@ int model::save_model_tassign(string filename) {
 
     // wirte docs with topic assignments for words
     for (i = 0; i < ptrndata->M; i++) {    
-	for (j = 0; j < ptrndata->docs[i]->length; j++) {
-	    fprintf(fout, "%d:%d ", ptrndata->docs[i]->words[j], z[i][j]);
+	for (j = 0; j < ptrndata->get_docs(i).length; j++) {
+	    fprintf(fout, "%d:%d ", ptrndata->get_docs(i).words[j], get_z(i)[j]);
 	}
 	fprintf(fout, "\n");
     }
@@ -340,21 +347,36 @@ int model::save_model_tassign(string filename) {
 }
 
 int model::save_model_theta(string filename) {
-    FILE * fout = fopen(filename.c_str(), "w");
+    int index = 0;
+    string base_name = filename+"."+to_string(index);
+    FILE * fout = fopen(base_name.c_str(), "w");
     if (!fout) {
-	printf("Cannot open file %s to save!\n", filename.c_str());
+	printf("Cannot open file %s to save!\n", base_name.c_str());
 	return 1;
     }
-    
+    int size = 0; 
     for (int i = 0; i < M; i++) {
 	for (int j = 0; j < K; j++) {
-	    fprintf(fout, "%f ", theta[i][j]);
+            ++size;
+	    fprintf(fout, "%f ", get_theta(i)[j]);
 	}
 	fprintf(fout, "\n");
+        if(size > MOD_THETA_SAVE/8){
+          fclose(fout );
+          fout = nullptr;
+          ++index;
+          base_name = filename+"."+to_string(index);
+          fout = fopen(base_name.c_str(),"w");
+          if (!fout) {
+	    printf("Cannot open file %s to save!\n", base_name.c_str());
+	    return 1;
+          }
+          size = 0;
+        }
     }
     
     fclose(fout);
-    
+    fout = nullptr; 
     return 0;
 }
 
@@ -471,8 +493,8 @@ int model::save_inf_model_tassign(string filename) {
 
     // wirte docs with topic assignments for words
     for (i = 0; i < pnewdata->M; i++) {    
-	for (j = 0; j < pnewdata->docs[i]->length; j++) {
-	    fprintf(fout, "%d:%d ", pnewdata->docs[i]->words[j], newz[i][j]);
+	for (j = 0; j < pnewdata->docs[i].length; j++) {
+	    fprintf(fout, "%d:%d ", pnewdata->docs[i].words[j], newz[i][j]);
 	}
 	fprintf(fout, "\n");
     }
@@ -592,11 +614,11 @@ int model::init_est() {
 
     // + read training data
     ptrndata = new dataset;
+    ptrndata->dir = dir;
     if (ptrndata->read_trndata(dir + dfile, dir + wordmapfile)) {
         printf("Fail to read training data!\n");
         return 1;
     }
-		
     // + allocate memory and assign values for variables
     M = ptrndata->M;
     V = ptrndata->V;
@@ -611,15 +633,23 @@ int model::init_est() {
     	    nw[w][k] = 0;
         }
     }
-	
-    nd = new int*[M];
+    //nd = vector<vector<int> >(M);
     for (m = 0; m < M; m++) {
-        nd[m] = new int[K];
+        auto nd_e = vector<int>(K);
         for (k = 0; k < K; k++) {
-    	    nd[m][k] = 0;
+            nd_e[k] = 0;
         }
+        add_nd(nd_e,m);
     }
-	
+
+    if(nd.size() > 0){
+      nd_file_names.push_back(dir+"ND_"+std::to_string(nd_cur_index)+".data");
+      write_to_disk(nd_cur_index,nd_file_names,nd) ; 
+      //nd.clear();
+      nd_cur_size = 0;
+      nd_cur_index++;
+    }
+
     nwsum = new int[K];
     for (k = 0; k < K; k++) {
 	nwsum[k] = 0;
@@ -629,34 +659,48 @@ int model::init_est() {
     for (m = 0; m < M; m++) {
 	ndsum[m] = 0;
     }
-
     srandom(1234); // Initialize random number generator
-    z = new int*[M];
+    //z = vector<vector<int>>(M);
     for (m = 0; m < ptrndata->M; m++) {
-	int N = ptrndata->docs[m]->length;
-	z[m] = new int[N];
-	
+	int N = ptrndata->get_docs(m).length;
+        vector<int> z_e = vector<int>(N,0);
         // initialize for z
         for (n = 0; n < N; n++) {
     	    int topic = (int)(((double)random() / RAND_MAX) * K);
-    	    z[m][n] = topic;
+    	    z_e[n] = topic;
     	    
     	    // number of instances of word i assigned to topic j
-    	    nw[ptrndata->docs[m]->words[n]][topic] += 1;
+    	    nw[ptrndata->get_docs(m).words[n]][topic] += 1;
     	    // number of words in document i assigned to topic j
-    	    nd[m][topic] += 1;
+            get_nd(m)[topic] += 1;
+    	    //nd[m][topic] += 1;
     	    // total number of words assigned to topic j
     	    nwsum[topic] += 1;
         } 
+        add_z(z_e,m);
         // total number of words in document i
         ndsum[m] = N;      
     }
-    
-    theta = new double*[M];
-    for (m = 0; m < M; m++) {
-        theta[m] = new double[K];
+    if(z.size() > 0){
+      z_file_names.push_back(dir+"Z_"+std::to_string(z_cur_index)+".data");
+      write_to_disk(z_cur_index,z_file_names,z) ; 
+      //nd.clear();
+      z_cur_size = 0;
+      z_cur_index++;
     }
-	
+
+    //theta = vector<vector<double> >(M);
+    for (m = 0; m < M; m++) {
+        auto theta_e = vector<double>(K);
+        add_theta(theta_e, m);
+    }
+    if(theta.size() > 0){
+      theta_file_names.push_back(dir+"THETA_"+std::to_string(theta_cur_index)+".data");
+      write_to_disk(theta_cur_index,theta_file_names,theta) ; 
+      //nd.clear();
+      theta_cur_size = 0;
+      theta_cur_index++;
+    }
     phi = new double*[K];
     for (k = 0; k < K; k++) {
         phi[k] = new double[V];
@@ -684,10 +728,12 @@ int model::init_estc() {
     	    nw[w][k] = 0;
         }
     }
-	
-    nd = new int*[M];
+    
+    nd = vector<vector<int> >(M);
+    //nd = new int*[M];
     for (m = 0; m < M; m++) {
-        nd[m] = new int[K];
+        //nd[m] = new int[K];
+        nd[m] = vector<int>(K);
         for (k = 0; k < K; k++) {
     	    nd[m][k] = 0;
         }
@@ -704,11 +750,11 @@ int model::init_estc() {
     }
 
     for (m = 0; m < ptrndata->M; m++) {
-	int N = ptrndata->docs[m]->length;
+	int N = ptrndata->get_docs(m).length;
 
 	// assign values for nw, nd, nwsum, and ndsum	
         for (n = 0; n < N; n++) {
-    	    int w = ptrndata->docs[m]->words[n];
+    	    int w = ptrndata->get_docs(m).words[n];
     	    int topic = z[m][n];
     	    
     	    // number of instances of word i assigned to topic j
@@ -721,10 +767,12 @@ int model::init_estc() {
         // total number of words in document i
         ndsum[m] = N;      
     }
-	
-    theta = new double*[M];
+
+    theta = vector<vector<double>>(M);	
+    //theta = new double*[M];
     for (m = 0; m < M; m++) {
-        theta[m] = new double[K];
+        //theta[m] = new double[K];
+        theta[m] = vector<double>(K);
     }
 	
     phi = new double*[K];
@@ -760,14 +808,13 @@ void model::estimate() {
 
             // Precompute results to be used in model::sampling
 	    for (int k = 0; k < K; k++) {
-	      f1[k] = (nd[m][k] + alpha) / ((nwsum[k] + Vbeta)*(ndsum[m] - 1.0 + Kalpha));
+	      f1[k] = (get_nd(m)[k] + alpha) / ((nwsum[k] + Vbeta)*(ndsum[m] - 1.0 + Kalpha));
 	    }
-
-	    for (int n = 0; n < ptrndata->docs[m]->length; n++) {
+	    for (int n = 0; n < ptrndata->get_docs(m).length; n++) {
 	      // (z_i = z[m][n])
 	      // sample from p(z_i|z_-i, w)
 	      int topic = sampling(m, n, f1);
-	      z[m][n] = topic;
+	      get_z(m)[n] = topic;
 	    }
 	}
 	
@@ -793,17 +840,17 @@ void model::estimate() {
 
 int model::sampling(int m, int n, double *f1) {
     // remove z_i from the count variables
-    int topic = z[m][n];
-    int w = ptrndata->docs[m]->words[n];
+    int topic = get_z(m)[n];
+    int w = ptrndata->get_docs(m).words[n];
     nw[w][topic] -= 1;
-    nd[m][topic] -= 1;
+    get_nd(m)[topic] -= 1;
     nwsum[topic] -= 1;
 
     double Vbeta = V * beta;
     double Kalpha = K * alpha;    
 
     // Update only element [topic] of array f1
-    f1[topic] = (nd[m][topic] + alpha) / ((nwsum[topic] + Vbeta)*(ndsum[m] - 1.0 + Kalpha));
+    f1[topic] = (get_nd(m)[topic] + alpha) / ((nwsum[topic] + Vbeta)*(ndsum[m] - 1.0 + Kalpha));
 
     // do multinomial sampling via cumulative method
     for (int k = 0; k < K; k++) {
@@ -835,11 +882,11 @@ int model::sampling(int m, int n, double *f1) {
 
     // add newly estimated z_i to count variables
     nw[w][topic] += 1;
-    nd[m][topic] += 1;
+    get_nd(m)[topic] += 1;
     nwsum[topic] += 1;
 
     // Recover original value of element [topic] of array f1
-    f1[topic] = (nd[m][topic] + alpha) / ((nwsum[topic] + Vbeta)*(ndsum[m] - 1.0 + Kalpha));
+    f1[topic] = (get_nd(m)[topic] + alpha) / ((nwsum[topic] + Vbeta)*(ndsum[m] - 1.0 + Kalpha));
 
     return topic;
 }
@@ -847,7 +894,7 @@ int model::sampling(int m, int n, double *f1) {
 void model::compute_theta() {
     for (int m = 0; m < M; m++) {
 	for (int k = 0; k < K; k++) {
-	    theta[m][k] = (nd[m][k] + alpha) / (ndsum[m] + K * alpha);
+	    get_theta(m)[k] = (get_nd(m)[k] + alpha) / (ndsum[m] + K * alpha);
 	}
     }
 }
@@ -879,10 +926,12 @@ int model::init_inf() {
     	    nw[w][k] = 0;
         }
     }
-	
-    nd = new int*[M];
+    
+    nd = vector<vector<int>>(M);	
+    //nd = new int*[M];
     for (m = 0; m < M; m++) {
-        nd[m] = new int[K];
+        nd[m] = vector<int>(K);
+        //nd[m] = new int[K];
         for (k = 0; k < K; k++) {
     	    nd[m][k] = 0;
         }
@@ -899,11 +948,11 @@ int model::init_inf() {
     }
 
     for (m = 0; m < ptrndata->M; m++) {
-	int N = ptrndata->docs[m]->length;
+	int N = ptrndata->get_docs(m).length;
 
 	// assign values for nw, nd, nwsum, and ndsum	
         for (n = 0; n < N; n++) {
-    	    int w = ptrndata->docs[m]->words[n];
+    	    int w = ptrndata->get_docs(m).words[n];
     	    int topic = z[m][n];
     	    
     	    // number of instances of word i assigned to topic j
@@ -963,12 +1012,12 @@ int model::init_inf() {
     srandom(1234);  // Initialize random number generator
     newz = new int*[newM];
     for (m = 0; m < pnewdata->M; m++) {
-	int N = pnewdata->docs[m]->length;
+	int N = pnewdata->docs[m].length;
 	newz[m] = new int[N];
 
 	// assign values for nw, nd, nwsum, and ndsum	
         for (n = 0; n < N; n++) {
-    	    int w = pnewdata->docs[m]->words[n];
+    	    int w = pnewdata->docs[m].words[n];
     	    int _w = pnewdata->_docs[m]->words[n];
     	    int topic = (int)(((double)random() / RAND_MAX) * K);
     	    newz[m][n] = topic;
@@ -1025,7 +1074,7 @@ void model::inference() {
 		((nwsum[k] + newnwsum[k] + Vbeta)*(newndsum[m] - 1.0 + Kalpha));
 	    }
 
-	    for (int n = 0; n < pnewdata->docs[m]->length; n++) {
+	    for (int n = 0; n < pnewdata->docs[m].length; n++) {
 	      // (newz_i = newz[m][n])
 	      // sample from p(z_i|z_-i, w)
 	      int topic = inf_sampling(m, n, f1);
@@ -1046,7 +1095,7 @@ void model::inference() {
 int model::inf_sampling(int m, int n, double *f1) {
     // remove z_i from the count variables
     int topic = newz[m][n];
-    int w = pnewdata->docs[m]->words[n];
+    int w = pnewdata->docs[m].words[n];
     int _w = pnewdata->_docs[m]->words[n];
     newnw[_w][topic] -= 1;
     newnd[m][topic] -= 1;

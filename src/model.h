@@ -34,6 +34,7 @@
 
 #include "constants.h"
 #include "dataset.h"
+#define MOD_THETA_SAVE 300000000
 
 using namespace std;
 
@@ -75,12 +76,55 @@ public:
     int withrawstrs;
 
     double * p; // temp variable for sampling
-    int ** z; // topic assignments for words, size M x doc.size()
+
+    vector<vector<int> > z; 
+    vector<string> z_file_names;
+    vector<int> z_start_index;
+    int z_cur_size;
+    int z_cur_index;
+    
+    vector<int>& get_z(int idx){
+      return get_docs(idx,z_file_names,z_start_index,z_cur_size,z_cur_index,z);
+    }
+    
+    void add_z(vector<int>& e, int idx){
+       add_element(e,idx,z_file_names,z_start_index,z_cur_size,z_cur_index,z,"Z"); 
+    }
+    
+        
+    //int ** z; // topic assignments for words, size M x doc.size()
     int ** nw; // cwt[i][j]: number of instances of word/term i assigned to topic j, size V x K
-    int ** nd; // na[i][j]: number of words in document i assigned to topic j, size M x K
+    vector<vector<int> > nd;
+    vector<string> nd_file_names;
+    vector<int> nd_start_index;
+    int nd_cur_size;
+    int nd_cur_index;
+    
+    vector<int>& get_nd(int idx){
+      return get_docs(idx,nd_file_names,nd_start_index,nd_cur_size, nd_cur_index,nd);
+    } 
+    
+    void add_nd(vector<int>&e, int idx){
+       add_element(e,idx,nd_file_names,nd_start_index,nd_cur_size,nd_cur_index,nd,"ND"); 
+    }
+
+    //int ** nd; // na[i][j]: number of words in document i assigned to topic j, size M x K
     int * nwsum; // nwsum[j]: total number of words assigned to topic j, size K
     int * ndsum; // nasum[i]: total number of words in document i, size M
-    double ** theta; // theta: document-topic distributions, size M x K
+    vector<vector<double> > theta;
+    vector<string> theta_file_names;
+    vector<int> theta_start_index;
+    int theta_cur_size;
+    int theta_cur_index;
+    vector<double>& get_theta(int idx){
+      return get_docs(idx,theta_file_names,theta_start_index,theta_cur_size, theta_cur_index,theta);
+    } 
+    
+    void add_theta(vector<double>&e, int idx){
+       add_element(e,idx,theta_file_names,theta_start_index,theta_cur_size,theta_cur_index,theta,"THETA"); 
+    }
+
+    //double ** theta; // theta: document-topic distributions, size M x K
     double ** phi; // phi: topic-word distributions, size K x V
     
     // for inference only
@@ -151,6 +195,76 @@ public:
     int inf_sampling(int m, int n, double *f1);
     void compute_newtheta();
     void compute_newphi();
+/*
+ help fucntion 
+*/
+    template<typename D>
+    bool write_to_disk(int index,vector<string> &file_names,vector<D> &object){
+        //index to page
+        ofstream ofs;
+        ofs.open(file_names[index], ofstream::out|ofstream::trunc);
+        boost::archive::text_oarchive oa(ofs);
+        oa << object;
+        ofs.close();
+        return true;
+    }
+
+    template<typename D>
+    bool read_from_disk(int index,vector<string> &file_names, vector<int> &start_index, int &cur_size, int & cur_index, vector<D>& object){
+      //index to page
+      if(cur_index < start_index.size()){
+        write_to_disk(cur_index,file_names,object);
+      }
+      ifstream ifs(file_names[index]);
+      boost::archive::text_iarchive ia(ifs);
+      object.clear();
+      ia >> object;
+      cur_size = object.size();
+      cur_index = index;
+      return true;
+    }
+    
+     
+    template<typename D>
+    D& get_docs(int idx,vector<string> &file_names, vector<int> &start_index, int &cur_size, int & cur_index, vector<D>& object) {
+       if(!( cur_index < start_index.size()&&
+             idx >= start_index[cur_index]&& 
+            (cur_index==start_index.size()-1||idx < start_index[cur_index+1]))){
+         int start = 0;
+         int end = start_index.size()-1;
+         while(start+1 < end){
+           int mid = start + ((end-start)>>1);
+            if(idx < start_index[mid]){
+              end = mid;
+            }else{
+              start = mid;
+            }
+         }
+         int dex = idx >= start_index[end]?end:start;
+         read_from_disk(dex,file_names,start_index,cur_size,cur_index,object);
+       } 
+       return object[idx-start_index[cur_index]];
+     }  
+      
+     template<typename E>
+     void add_element(E&e, int idx, vector<string> &file_names, vector<int> &start_index, 
+                      int &cur_size, int & cur_index, vector<E>& object,string name){
+       if(0 <= idx && idx < M){
+         if(object.empty()){
+           start_index.push_back(idx);
+         } 
+         object.push_back(e);
+         cur_size++;
+         if(object.size() >MAX_MEM/4){
+           file_names.push_back(dir+name+"_"+std::to_string(cur_index)+".data");
+           write_to_disk(cur_index,file_names,object);
+           object.clear();
+           cur_size = 0;
+           cur_index++; 
+         }
+       }
+     }
+
 };
 
 #endif
