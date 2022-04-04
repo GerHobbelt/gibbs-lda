@@ -27,6 +27,7 @@
 #include "strtokenizer.h"
 #include "utils.h"
 #include "model.h"
+#include <cstdlib> //includes std::atof, recommended. Usually also includes atof, for some weird reason
 
 using namespace std;
 
