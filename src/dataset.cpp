@@ -29,6 +29,11 @@
 
 using namespace std;
 
+/**
+ * Not that these functions are used for serializing and deserializing. Do not write debug information in the write 
+ * function if you are also not prepared to adapt the read function.
+ */
+
 //write  training dataset words map  to the wordmapfile
  int dataset::write_wordmap(string wordmapfile, mapword2id * pword2id) 
 {
@@ -40,7 +45,8 @@ using namespace std;
     }
     
     mapword2id::iterator it;
-    fprintf(fout, "Wordmap size %zu\n", pword2id->size());
+    fprintf("Wordmap size: %zu\n", pword2id->size());    // debug output
+    fprintf(fout, "%zu\n", pword2id->size());
      for(it = pword2id->begin(); it != pword2id->end(); it++) 
 	{
 		fprintf(fout, "%s %d\n", (it->first).c_str(), it->second);
@@ -91,7 +97,9 @@ int dataset::read_wordmap(string wordmapfile , mapid2word * pid2word)
     if (!fin) {
 	printf("Cannot open file %s to read!\n", wordmapfile.c_str());
 	return 1;
-    }    
+    } else {
+	printf("Opened file %s to read wordmap\n", wordmapfile.c_str());
+    }
     
     char buff[BUFF_SIZE_SHORT];
     string line;
