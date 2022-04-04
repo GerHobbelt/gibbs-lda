@@ -256,7 +256,7 @@ void model::set_default_values()
     FILE *  fin		= fopen(filename.c_str(),"r");//load model-00200.tassign 
     if (!fin) 
 	{
-		printf("Cannot open file %d to load model!\n", filename.c_str());
+		printf("Cannot open file %s to load model!\n", filename.c_str());
 		return 1;
     }
     
@@ -300,6 +300,7 @@ void model::set_default_values()
 		// allocate and add new document to the corpus
 		document * pdoc = new document(words);//instance  a document.
 		ptrndata->add_doc(pdoc, i);           //docs[i] = pdocs
+
 		// assign values for z
 		z[i] = new int[topics.size()];
 		for(j=0;j<topics.size();j++)
@@ -308,6 +309,7 @@ void model::set_default_values()
 		}
 
     }  //for i<M end  
+
     fclose(fin);
     
     return 0;
@@ -621,7 +623,9 @@ int model::save_inf_model_twords(string filename) {
  int model::init_est()
 {
     int m, n, w, k;
+
 	p = new double[K];
+
     // + 1.read training data
     ptrndata = new dataset;
     if (ptrndata->read_trndata(dir+dfile,dir+wordmapfile))
@@ -705,6 +709,7 @@ int model::init_estc()
 {
     // estimating the model from a previously estimated one
     int m, n, w, k;
+
     p = new double[K];
 
     //1....load model, i.e., read z and ptrndata
@@ -752,6 +757,7 @@ int model::init_estc()
 	{
 		document *mydoc = ptrndata->docs[m];
 		int N = mydoc->length;
+
 		// assign values for nw,nd,nwsum,and ndsum	
         for (n = 0; n < N; n++) 
 		{
@@ -1024,6 +1030,7 @@ void model::compute_phi()
     	    int _w = _mydoc->words[n]; 
     	    int topic = (int)(((double)random() / RAND_MAX) * K);
     	    newz[m][n] = topic;
+
     	    // number of instances of word i assigned to topic j
     	    newnw[_w][topic] += 1;		  //unseen data  wordIndex...********
 
@@ -1064,7 +1071,9 @@ void model::compute_phi()
      for(inf_liter = 1; inf_liter <= niters; inf_liter++) 
 	{
 		double perplexity_result =0.0;
-//		printf("Iteration %d ...\n", inf_liter);
+
+		printf("Iteration %d ...\n", inf_liter);
+
 		// for all newz_i
 		 for(int m = 0; m < newM; m++) 
 		{
@@ -1082,8 +1091,8 @@ void model::compute_phi()
 			compute_newtheta();
 			compute_newphi()  ;
 			perplexity_result = test_perplexity();
-///			printf("Perplexity is %f!\n",perplexity_result);
-			printf("%f\n",perplexity_result);
+
+			printf("Perplexity is %f!\n",perplexity_result);
 		}
 		
     }
@@ -1136,6 +1145,7 @@ void model::compute_phi()
 
     newnd[m][topic]  += 1;
     newndsum[m]		 += 1;
+
     return topic;
 }
 
