@@ -22,7 +22,7 @@
  */
 
 #include "model.h"
-#include <stdio.h>
+#include <cstdio>
 
 using namespace std;
 
