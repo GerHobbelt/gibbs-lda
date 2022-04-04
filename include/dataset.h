@@ -151,7 +151,7 @@ public:
 		delete _docs[i];		
 	    }
 	}
-	delete _docs;	
+	delete[] _docs;	
     }
     
     void deallocate() 
@@ -165,7 +165,7 @@ public:
 		delete _docs[i];
 	    }
 	}
-	delete _docs;
+	delete[] _docs;
 		_docs = nullptr;
     }
 
