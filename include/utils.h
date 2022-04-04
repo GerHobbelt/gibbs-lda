@@ -26,8 +26,6 @@
 
 #include <string>
 
-using namespace std;
-
 class model;
 
 class utils {

@@ -40,7 +40,7 @@ using namespace std;
     }
     
     mapword2id::iterator it;
-    fprintf(fout, "%d\n", pword2id->size());
+    fprintf(fout, "%zu\n", pword2id->size());
      for(it = pword2id->begin(); it != pword2id->end(); it++) 
 	{
 		fprintf(fout, "%s %d\n", (it->first).c_str(), it->second);

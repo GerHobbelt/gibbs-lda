@@ -50,108 +50,108 @@ model::~model()
     }
 
     if (ptrndata) {
-	delete ptrndata;
+        delete ptrndata;
     }
-    
+
     if (pnewdata) {
-	delete pnewdata;
+        delete pnewdata;
     }
 
     if (z) {
-	for (int m = 0; m < M; m++) {
-	    if (z[m]) {
-		delete z[m];
-	    }
-	}
+        for (int m = 0; m < M; m++) {
+            if (z[m]) {
+                delete z[m];
+            }
+        }
     }
-    
+
     if (nw) {
-	for (int w = 0; w < V; w++) {
-	    if (nw[w]) {
-		delete nw[w];
-	    }
-	}
+        for (int w = 0; w < V; w++) {
+            if (nw[w]) {
+                delete nw[w];
+            }
+        }
     }
 
     if (nd) {
-	for (int m = 0; m < M; m++) {
-	    if (nd[m]) {
-		delete nd[m];
-	    }
-	}
-    } 
-    
+        for (int m = 0; m < M; m++) {
+            if (nd[m]) {
+                delete nd[m];
+            }
+        }
+    }
+
     if (nwsum) {
-	delete nwsum;
-    }   
-    
+        delete nwsum;
+    }
+
     if (ndsum) {
-	delete ndsum;
+        delete ndsum;
     }
-    
+
     if (theta) {
-	for (int m = 0; m < M; m++) {
-	    if (theta[m]) {
-		delete theta[m];
-	    }
-	}
+        for (int m = 0; m < M; m++) {
+            if (theta[m]) {
+                delete theta[m];
+            }
+        }
     }
-    
+
     if (phi) {
-	for (int k = 0; k < K; k++) {
-	    if (phi[k]) {
-		delete phi[k];
-	    }
-	}
+        for (int k = 0; k < K; k++) {
+            if (phi[k]) {
+                delete phi[k];
+            }
+        }
     }
 
     // only for inference
     if (newz) {
-	for (int m = 0; m < newM; m++) {
-	    if (newz[m]) {
-		delete newz[m];
-	    }
-	}
+        for (int m = 0; m < newM; m++) {
+            if (newz[m]) {
+                delete newz[m];
+            }
+        }
     }
-    
+
     if (newnw) {
-	for (int w = 0; w < newV; w++) {
-	    if (newnw[w]) {
-		delete newnw[w];
-	    }
-	}
+        for (int w = 0; w < newV; w++) {
+            if (newnw[w]) {
+                delete newnw[w];
+            }
+        }
     }
 
     if (newnd) {
-	for (int m = 0; m < newM; m++) {
-	    if (newnd[m]) {
-		delete newnd[m];
-	    }
-	}
-    } 
-    
+        for (int m = 0; m < newM; m++) {
+            if (newnd[m]) {
+                delete newnd[m];
+            }
+        }
+    }
+
     if (newnwsum) {
-	delete newnwsum;
-    }   
-    
+        delete newnwsum;
+    }
+
     if (newndsum) {
-	delete newndsum;
+        delete newndsum;
     }
-    
+
     if (newtheta) {
-	for (int m = 0; m < newM; m++) {
-	    if (newtheta[m]) {
-		delete newtheta[m];
-	    }
-	}
+        for (int m = 0; m < newM; m++) {
+            if (newtheta[m]) {
+                delete newtheta[m];
+            }
+        }
     }
-    
+
     if (newphi) {
-	for (int k = 0; k < K; k++) {
-	    if (newphi[k]) {
-		delete newphi[k];
-	    }
-	}
+        for (int k = 0; k < K; k++) {
+            if (newphi[k]) {
+                delete newphi[k];
+            }
+        }
     }
 }
 
@@ -164,15 +164,15 @@ void model::set_default_values()
     phi_suffix = ".phi";
     others_suffix = ".others";
     twords_suffix = ".twords";
-    
+
     dir = "./";
     dfile = "trndocs.dat";
-    model_name = "model-final";    
+    model_name = "model-final";
     model_status = MODEL_STATUS_UNKNOWN;
-    
+
     ptrndata = NULL;
     pnewdata = NULL;
-    
+
     M = 0;
     V = 0;
     K = 100;
@@ -180,10 +180,10 @@ void model::set_default_values()
     beta = 0.1;
     niters = 2000;
     liter = 0;
-    savestep = 200;    
+    savestep = 200;
     twords = 0;
     withrawstrs = 0;
-    
+
     p = NULL;
     z = NULL;
     nw = NULL;
@@ -192,7 +192,7 @@ void model::set_default_values()
     ndsum = NULL;
     theta = NULL;
     phi = NULL;
-    
+
     newM = 0;
     newV = 0;
     newz = NULL;
@@ -252,14 +252,15 @@ void model::set_default_values()
  int model::load_model(string model_name)
 {
     int i,j; 
+    
     string  filename = dir + model_name + tassign_suffix;
-    FILE *  fin		= fopen(filename.c_str(),"r");//load model-00200.tassign 
+    FILE * fin = fopen(filename.c_str(), "r");
     if (!fin) 
 	{
 		printf("Cannot open file %s to load model!\n", filename.c_str());
 		return 1;
     }
-    
+
     char buff[BUFF_SIZE_LONG];
     string line;
 
@@ -366,48 +367,48 @@ int model::save_model_tassign(string filename)
 }
 
 int model::save_model_theta(string filename) {
-    FILE * fout = fopen(filename.c_str(), "w");
+    FILE *fout = fopen(filename.c_str(), "w");
     if (!fout) {
-	printf("Cannot open file %s to save!\n", filename.c_str());
-	return 1;
+        printf("Cannot open file %s to save!\n", filename.c_str());
+        return 1;
     }
-    
+
     for (int i = 0; i < M; i++) {
-	for (int j = 0; j < K; j++) {
-	    fprintf(fout, "%f ", theta[i][j]);
-	}
-	fprintf(fout, "\n");
+        for (int j = 0; j < K; j++) {
+            fprintf(fout, "%f ", theta[i][j]);
+        }
+        fprintf(fout, "\n");
     }
-    
+
     fclose(fout);
-    
+
     return 0;
 }
 
 int model::save_model_phi(string filename) {
-    FILE * fout = fopen(filename.c_str(), "w");
+    FILE *fout = fopen(filename.c_str(), "w");
     if (!fout) {
-	printf("Cannot open file %s to save!\n", filename.c_str());
-	return 1;
+        printf("Cannot open file %s to save!\n", filename.c_str());
+        return 1;
     }
-    
+
     for (int i = 0; i < K; i++) {
-	for (int j = 0; j < V; j++) {
-	    fprintf(fout, "%f ", phi[i][j]);
-	}
-	fprintf(fout, "\n");
+        for (int j = 0; j < V; j++) {
+            fprintf(fout, "%f ", phi[i][j]);
+        }
+        fprintf(fout, "\n");
     }
-    
-    fclose(fout);    
-    
+
+    fclose(fout);
+
     return 0;
 }
 
 int model::save_model_others(string filename) {
-    FILE * fout = fopen(filename.c_str(), "w");
+    FILE *fout = fopen(filename.c_str(), "w");
     if (!fout) {
-	printf("Cannot open file %s to save!\n", filename.c_str());
-	return 1;
+        printf("Cannot open file %s to save!\n", filename.c_str());
+        return 1;
     }
 
     fprintf(fout, "alpha=%f\n", alpha);
@@ -416,9 +417,9 @@ int model::save_model_others(string filename) {
     fprintf(fout, "ndocs=%d\n", M);
     fprintf(fout, "nwords=%d\n", V);
     fprintf(fout, "liter=%d\n", liter);
-    
-    fclose(fout);    
-    
+
+    fclose(fout);
+
     return 0;
 }
 
@@ -505,63 +506,63 @@ int model::save_inf_model_tassign(string filename)
     }
 
     // wirte docs with topic assignments for words
-    for (i = 0; i < pnewdata->M; i++) {    
-	for (j = 0; j < pnewdata->docs[i]->length; j++) {
-	    fprintf(fout, "%d:%d ", pnewdata->docs[i]->words[j], newz[i][j]);
-	}
-	fprintf(fout, "\n");
+    for (i = 0; i < pnewdata->M; i++) {
+        for (j = 0; j < pnewdata->docs[i]->length; j++) {
+            fprintf(fout, "%d:%d ", pnewdata->docs[i]->words[j], newz[i][j]);
+        }
+        fprintf(fout, "\n");
     }
 
     fclose(fout);
-    
+
     return 0;
 }
 
 int model::save_inf_model_newtheta(string filename) {
     int i, j;
 
-    FILE * fout = fopen(filename.c_str(), "w");
+    FILE *fout = fopen(filename.c_str(), "w");
     if (!fout) {
-	printf("Cannot open file %s to save!\n", filename.c_str());
-	return 1;
+        printf("Cannot open file %s to save!\n", filename.c_str());
+        return 1;
     }
-    
+
     for (i = 0; i < newM; i++) {
-	for (j = 0; j < K; j++) {
-	    fprintf(fout, "%f ", newtheta[i][j]);
-	}
-	fprintf(fout, "\n");
+        for (j = 0; j < K; j++) {
+            fprintf(fout, "%f ", newtheta[i][j]);
+        }
+        fprintf(fout, "\n");
     }
-    
+
     fclose(fout);
-    
+
     return 0;
 }
 
 int model::save_inf_model_newphi(string filename) {
-    FILE * fout = fopen(filename.c_str(), "w");
+    FILE *fout = fopen(filename.c_str(), "w");
     if (!fout) {
-	printf("Cannot open file %s to save!\n", filename.c_str());
-	return 1;
+        printf("Cannot open file %s to save!\n", filename.c_str());
+        return 1;
     }
-    
+
     for (int i = 0; i < K; i++) {
-	for (int j = 0; j < newV; j++) {
-	    fprintf(fout, "%f ", newphi[i][j]);
-	}
-	fprintf(fout, "\n");
+        for (int j = 0; j < newV; j++) {
+            fprintf(fout, "%f ", newphi[i][j]);
+        }
+        fprintf(fout, "\n");
     }
-    
-    fclose(fout);    
-    
+
+    fclose(fout);
+
     return 0;
 }
 
 int model::save_inf_model_others(string filename) {
-    FILE * fout = fopen(filename.c_str(), "w");
+    FILE *fout = fopen(filename.c_str(), "w");
     if (!fout) {
-	printf("Cannot open file %s to save!\n", filename.c_str());
-	return 1;
+        printf("Cannot open file %s to save!\n", filename.c_str());
+        return 1;
     }
 
     fprintf(fout, "alpha=%f\n", alpha);
@@ -570,53 +571,86 @@ int model::save_inf_model_others(string filename) {
     fprintf(fout, "ndocs=%d\n", newM);
     fprintf(fout, "nwords=%d\n", newV);
     fprintf(fout, "liter=%d\n", inf_liter);
-    
-    fclose(fout);    
-    
+
+    fclose(fout);
+
     return 0;
 }
 
 int model::save_inf_model_twords(string filename) {
-    FILE * fout = fopen(filename.c_str(), "w");
+    FILE *fout = fopen(filename.c_str(), "w");
     if (!fout) {
-	printf("Cannot open file %s to save!\n", filename.c_str());
-	return 1;
+        printf("Cannot open file %s to save!\n", filename.c_str());
+        return 1;
     }
-    
+
     if (twords > newV) {
-	twords = newV;
+        twords = newV;
     }
     mapid2word::iterator it;
     map<int, int>::iterator _it;
-    
+
     for (int k = 0; k < K; k++) {
-	vector<pair<int, double> > words_probs;
-	pair<int, double> word_prob;
-	for (int w = 0; w < newV; w++) {
-	    word_prob.first = w;
-	    word_prob.second = newphi[k][w];
-	    words_probs.push_back(word_prob);
-	}
-    
+        vector<pair<int, double> > words_probs;
+        pair<int, double> word_prob;
+        for (int w = 0; w < newV; w++) {
+            word_prob.first = w;
+            word_prob.second = newphi[k][w];
+            words_probs.push_back(word_prob);
+        }
+
         // quick sort to sort word-topic probability
-	utils::quicksort(words_probs, 0, words_probs.size() - 1);
-	
-	fprintf(fout, "Topic %dth:\n", k);
-	for (int i = 0; i < twords; i++) {
-	    _it = pnewdata->_id2id.find(words_probs[i].first);
-	    if (_it == pnewdata->_id2id.end()) {
-		continue;
-	    }
-	    it = id2word.find(_it->second);
-	    if (it != id2word.end()) {
-		fprintf(fout, "\t%s   %f\n", (it->second).c_str(), words_probs[i].second);
-	    }
-	}
+        utils::quicksort(words_probs, 0, words_probs.size() - 1);
+
+        fprintf(fout, "Topic %dth:\n", k);
+        for (int i = 0; i < twords; i++) {
+            _it = pnewdata->_id2id.find(words_probs[i].first);
+            if (_it == pnewdata->_id2id.end()) {
+                continue;
+            }
+            it = id2word.find(_it->second);
+            if (it != id2word.end()) {
+                fprintf(fout, "\t%s   %f\n", (it->second).c_str(), words_probs[i].second);
+            }
+        }
     }
-    
-    fclose(fout);    
-    
-    return 0;    
+
+    fclose(fout);
+
+    return 0;
+}
+
+
+int read_wordmap(string wordmapfile, mapword2id *pword2id) {
+    pword2id->clear();
+
+    FILE *fin = fopen(wordmapfile.c_str(), "r");
+    if (!fin) {
+        printf("Cannot open file %s to read!\n", wordmapfile.c_str());
+        return 1;
+    }
+
+    char buff[BUFF_SIZE_SHORT];
+    string line;
+
+    fgets(buff, BUFF_SIZE_SHORT - 1, fin);
+    int nwords = atoi(buff);
+
+    for (int i = 0; i < nwords; i++) {
+        fgets(buff, BUFF_SIZE_SHORT - 1, fin);
+        line = buff;
+
+        strtokenizer strtok(line, " \t\r\n");
+        if (strtok.count_tokens() != 2) {
+            continue;
+        }
+
+        pword2id->insert(pair<string, int>(strtok.token(0), atoi(strtok.token(1).c_str())));
+    }
+
+    fclose(fin);
+
+    return 0;
 }
 
 
@@ -916,6 +950,9 @@ void model::compute_phi()
 {
     // estimating the model from a previously estimated one
     int m, n, w, k;
+
+    printf("Initializing the recommender.\n");
+
     p = new double[K];
 
     // load moel, i.e., read z and ptrndata

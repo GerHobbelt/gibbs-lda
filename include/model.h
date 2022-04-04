@@ -35,7 +35,6 @@
 #include "constants.h"
 #include "dataset.h"
 
-using namespace std;
 
 // LDA model
 class model {
@@ -84,6 +83,7 @@ public:
     double ** phi; // phi: topic-word distributions, size K x V
     
     // for inference only
+    map<string, int> mapword2id;
     int inf_liter;
     int newM;
     int newV;
