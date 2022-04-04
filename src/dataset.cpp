@@ -21,6 +21,7 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
+#include <iostream>
 #include <cstdio>
 #include <cstdlib>
 #include "constants.h"
@@ -160,11 +161,13 @@ int dataset::read_trndata(const string &dfile, const string &wordmapfile) {
 	}
 
 	// allocate memory for corpus
-	if (docs) {
+#if 0
+    if (docs) {
 		deallocate();
-	} else {
-		docs = new document *[M];
-	}
+    } else {
+		docs = new document*[M];
+    }
+#endif	
 
 	// set number of words to zero
 	V = 0;
@@ -186,18 +189,18 @@ int dataset::read_trndata(const string &dfile, const string &wordmapfile) {
 		}
 
 		// allocate new document
-		auto *pdoc = new document(length);
+		document pdoc = document(length);
 
 		// iterate over all words found
 		for (int j = 0; j < length; j++) {
 			it = word2id.find(strtok.token(j));
 			if (it == word2id.end()) {
 				// word not found, i.e., new word, add to vocabulary, set its id to vocabulary size
-				pdoc->words[j] = word2id.size();
+				pdoc.words[j] = word2id.size();
 				word2id.insert(pair<string, int>(strtok.token(j), word2id.size()));
 			} else {
 				// existing word, set its id in map
-				pdoc->words[j] = it->second;
+				pdoc.words[j] = it->second;
 			}
 		}
 
@@ -205,10 +208,20 @@ int dataset::read_trndata(const string &dfile, const string &wordmapfile) {
 		add_doc(pdoc, i);
 	}
 
+    if (docs.size() > 0)
+	{
+      file_names.push_back(dir+"data_"+std::to_string(cur_index)+".data");
+      write_to_disk(cur_index);
+      docs.clear();
+      cur_size = 0;
+      cur_index++; 
+    }
+    
 	fclose(fin);
 
 	// write word map to file
-	if (write_wordmap(wordmapfile, &word2id)) {
+	if (write_wordmap(wordmapfile, &word2id)) 
+	{
 		return 1;
 	}
 
@@ -219,7 +232,7 @@ int dataset::read_trndata(const string &dfile, const string &wordmapfile) {
 }
 
 //when estc or inference model need to use this function.
-int dataset::read_newdata(const string &dfile, const string &wordmapfile) {
+int dataset::read_newdata(const string &dfile, const string &wordmapfile)
 {
 	mapword2id word2id;
 	map<int, int> id2_id;
@@ -235,7 +248,7 @@ int dataset::read_newdata(const string &dfile, const string &wordmapfile) {
 
 	//2.read new  unseen documents...
 	FILE *fin = fopen(dfile.c_str(), "r");
-     if(!fin) 
+    if (!fin) 
 	{
 		printf("Cannot open file %s to read!\n", dfile.c_str());
 		return 1;
@@ -304,7 +317,6 @@ int dataset::read_newdata(const string &dfile, const string &wordmapfile) {
 				doc.push_back(it->second);	
 				_doc.push_back(_id);		
 			} //else end...
-
 		}//for end...
 
 		// allocate memory for new doc
@@ -324,7 +336,8 @@ int dataset::read_newdata(const string &dfile, const string &wordmapfile) {
 	return 0;
 }
 
-int dataset::read_newdata_withrawstrs(const string &dfile, const string &wordmapfile) {
+int dataset::read_newdata_withrawstrs(const string &dfile, const string &wordmapfile) 
+{
 	mapword2id word2id;
 	map<int, int> id2_id;
 
@@ -356,17 +369,20 @@ int dataset::read_newdata_withrawstrs(const string &dfile, const string &wordmap
 	}
 
 	// allocate memory for corpus
-	if (docs) {
+#if 0
+    if (docs) {
 		deallocate();
-	} else {
-		docs = new document *[M];
-	}
+    } else {
+		docs = new document*[M];
+    }
+#endif	
 	_docs = new document *[M];
 
 	// set number of words to zero
 	V = 0;
 
-	for (int i = 0; i < M; i++) {
+	for (int i = 0; i < M; i++) 
+	{
 		fgets(buff, BUFF_SIZE_LONG - 1, fin);
 		line = buff;
 		strtokenizer strtok(line, " \t\r\n");
@@ -396,7 +412,7 @@ int dataset::read_newdata_withrawstrs(const string &dfile, const string &wordmap
 		}
 
 		// allocate memory for new doc
-		auto *pdoc = new document(doc, line);
+		document pdoc = document(doc);
 		auto *_pdoc = new document(_doc, line);
 
 		// add new doc
