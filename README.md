@@ -19,7 +19,7 @@ my fork of GibbsLDA++: A C/C++ Implementation of Latent Dirichlet Allocation by 
 `****************************************************************************`
 
 
-                          TABLE OF CONTENTS
+# TABLE OF CONTENTS
 
 1. Introduction
    1. Description
@@ -270,7 +270,7 @@ my fork of GibbsLDA++: A C/C++ Implementation of Latent Dirichlet Allocation by 
 
     [document_i] = [word_i1] [word_i2] ... [word_iNi]
 
-  in which all [word_ij] (i=1..M, j=1..Ni) are text strings and they are
+  in which all \[word_ij\] (i=1..M, j=1..Ni) are text strings and they are 
   separated by the space character.
 
   Note that the terms document and word here are abstract and should not only be
