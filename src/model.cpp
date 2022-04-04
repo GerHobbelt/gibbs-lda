@@ -29,8 +29,8 @@
  *   http://www.arbylon.net/publications/text-est.pdf
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <time.h>
 #include <math.h>
 //#include <gmpxx.h>
