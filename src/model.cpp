@@ -34,7 +34,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <math.h>
-//#include <gmpxx.h>
+#include <random>
+
 #include "constants.h"
 #include "strtokenizer.h"
 #include "utils.h"
@@ -336,7 +337,7 @@ int model::save_model(const string &in_model_name)
 	return 0;
 }
 
-int model::save_model_tassign(const string &filename) {
+int model::save_model_tassign(const string &filename)
 {
 	int i, j;
 
@@ -401,7 +402,8 @@ int model::save_model_theta(const string &filename)
 	return 0;
 }
 
-int model::save_model_phi(const string &filename) {
+int model::save_model_phi(const string &filename)
+{
 	FILE *fout = fopen(filename.c_str(), "w");
 	if (!fout) {
 		printf("Cannot open file %s to save!\n", filename.c_str());
@@ -420,7 +422,8 @@ int model::save_model_phi(const string &filename) {
 	return 0;
 }
 
-int model::save_model_others(const string &filename) {
+int model::save_model_others(const string &filename)
+{
 	FILE *fout = fopen(filename.c_str(), "w");
 	if (!fout) {
 		printf("Cannot open file %s to save!\n", filename.c_str());
@@ -439,7 +442,8 @@ int model::save_model_others(const string &filename) {
 	return 0;
 }
 
-int model::save_model_twords(const string &filename) {
+int model::save_model_twords(const string &filename)
+{
 	FILE *fout = fopen(filename.c_str(), "w");
 	if (!fout) 
 	{
@@ -700,6 +704,10 @@ int read_wordmap(const string &wordmapfile, mapword2id *pword2id)
 }
 
 
+static std::mt19937 rnd_gen;
+static std::uniform_real_distribution<> rnd_distr;
+
+
 int model::init_est()
 {
 	int m, n, w, k;
@@ -745,12 +753,15 @@ int model::init_est()
 
     if (nd.size() > 0)
 	{
-      nd_file_names.push_back(dir+"ND_"+std::to_string(nd_cur_index)+".data");
+#ifdef HAVE_BOOST
+		nd_file_names.push_back(dir+"ND_"+std::to_string(nd_cur_index)+".data");
       write_to_disk(nd_cur_index,nd_file_names,nd) ; 
       //nd.clear();
       nd_cur_size = 0;
       nd_cur_index++;
-    }
+#else
+#endif
+	}
 
 	nwsum = new int[K];
 	for (k = 0; k < K; k++) 
@@ -764,7 +775,17 @@ int model::init_est()
 		ndsum[m] = 0;
 	}
 
+
+#if 0
 	srandom(time(nullptr)); // initialize for random number generation
+#else
+	// uncomment to use a non-deterministic seed
+	//    std::random_device rd;
+	//    rnd_gen = std::mt19937(rd());
+	rnd_gen = std::mt19937(1729);
+	rnd_distr = std::uniform_real_distribution<>(0.0, 1.0);
+#endif
+
     //z = vector<vector<int>>(M);
 	for (m = 0; m < ptrndata->M; m++) 
 	{
@@ -775,8 +796,12 @@ int model::init_est()
 		// initialize for z
 		for (n = 0; n < N; n++) 
 		{
-    	    int topic = (int)(((double)random() / RAND_MAX) * K); // random()/RAND_MAX ---> [0,1]
-    	    z_e[n] = topic;
+#if 0
+			int topic = (int)(((double)random() / RAND_MAX) * K); // random()/RAND_MAX ---> [0,1>
+#else
+			int topic = (int)(rnd_distr(rnd_gen) * K); // random()/RAND_MAX ---> [0,1>
+#endif
+			z_e[n] = topic;
 
 			// number of instances of word i assigned to topic j
     	    nw[mydoc.words[n]][topic] += 1;					 
@@ -792,12 +817,15 @@ int model::init_est()
 	}
     if (z.size() > 0)
 	{
-      z_file_names.push_back(dir+"Z_"+std::to_string(z_cur_index)+".data");
+#ifdef HAVE_BOOST
+		z_file_names.push_back(dir+"Z_"+std::to_string(z_cur_index)+".data");
       write_to_disk(z_cur_index,z_file_names,z) ; 
       //nd.clear();
       z_cur_size = 0;
       z_cur_index++;
-    }
+#else
+#endif
+	}
 
     //theta = vector<vector<double> >(M);
 	for (m = 0; m < M; m++) 
@@ -807,12 +835,15 @@ int model::init_est()
 	}
     if (theta.size() > 0)
 	{
-      theta_file_names.push_back(dir+"THETA_"+std::to_string(theta_cur_index)+".data");
+#ifdef HAVE_BOOST
+		theta_file_names.push_back(dir+"THETA_"+std::to_string(theta_cur_index)+".data");
       write_to_disk(theta_cur_index,theta_file_names,theta) ; 
       //nd.clear();
       theta_cur_size = 0;
       theta_cur_index++;
-    }
+#else
+#endif
+	}
 	
 	phi = new double *[K];
 	for (k = 0; k < K; k++) 
@@ -1016,7 +1047,7 @@ void model::estimate()
  * @param n
  *   word, index of the word to sample (does not need to occur in the document)
  */
-int model::sampling(const int m, int n, double *f1) {
+int model::sampling(const int m, int n, double *f1)
 {
 	// remove z_i from the count variables
     int topic = get_z(m)[n];
@@ -1049,8 +1080,12 @@ int model::sampling(const int m, int n, double *f1) {
 
 	// scaled sample because of unnormalized p[]
 
-    double u = ((double)random() / RAND_MAX) * sum;
-   
+#if 0
+	double u = ((double)random() / RAND_MAX) * sum;
+#else
+	double u = rnd_distr(rnd_gen) * sum;
+#endif
+
     // get topic with probability beyond u 
 		
     // Calculate multinomial coefficients as needed
@@ -1229,19 +1264,33 @@ int model::init_inf()
 		newndsum[m] = 0;
 	}
 
+#if 0
 	srandom(time(nullptr)); // initialize for random number generation
+#else
+	// uncomment to use a non-deterministic seed
+	//    std::random_device rd;
+	//    rnd_gen = std::mt19937(rd());
+	rnd_gen = std::mt19937(1729);
+	rnd_distr = std::uniform_real_distribution<>(0.0, 1.0);
+#endif
+
 	newz = new int *[newM];
 	for (int m = 0; m < pnewdata->M; m++) 
 	{
-		document &_mydoc= pnewdata->_docs[m];
-		int N = _mydoc.length;
+		document *_mydoc = pnewdata->_docs[m];
+		int N = _mydoc->length;
 		newz[m] = new int[N];
 
 		// assign values for nw, nd, nwsum, and ndsum
 		for (int n = 0; n < N; n++) 
 		{
-    	    int _w = _mydoc.words[n]; 
-			int topic = (int) (((double) random() / RAND_MAX) * K);
+    	    int _w = _mydoc->words[n]; 
+#if 0
+			int topic = (int)(((double)random() / RAND_MAX) * K); // random()/RAND_MAX ---> [0,1>
+#else
+			int topic = (int)(rnd_distr(rnd_gen) * K); // random()/RAND_MAX ---> [0,1>
+#endif
+
 			newz[m][n] = topic;
 
 			// number of instances of word i assigned to topic j
@@ -1340,7 +1389,7 @@ int model::inf_sampling(int m, int n, double *f1)
 	// remove z_i from the count variables
 	int topic = newz[m][n];
     int w = pnewdata->docs[m].words[n];
-	int _w = pnewdata->_docs[m].words[n];
+	int _w = pnewdata->_docs[m]->words[n];
 	newnw[_w][topic] -= 1;
 	newnd[m][topic] -= 1;
 	newnwsum[topic] -= 1;
@@ -1369,7 +1418,11 @@ int model::inf_sampling(int m, int n, double *f1)
     }
 	// scaled sample because of unnormalized p[]
 
-    double u = ((double)random() / RAND_MAX) * sum;
+#if 0
+	double u = ((double)random() / RAND_MAX) * sum;
+#else
+	double u = rnd_distr(rnd_gen) * sum;
+#endif
 
     // Calculate multinomial coefficients as needed
     if(p[0] > u) 
@@ -1439,10 +1492,10 @@ double model::train_perplexity()
 
      for ( m = 0;m < M; m++)
     {
-         document * mydoc = ptrndata->docs[m];
-         for ( n = 0; n < mydoc->length; n++)
+         document &mydoc = ptrndata->get_docs(m);
+         for ( n = 0; n < mydoc.length; n++)
         {
-            int v =  mydoc->words[n];
+            int v =  mydoc.words[n];
              for( k=0 ; k<K ; k++ )
 			 {
                 p[k] = theta[m][k]*phi[k][v];

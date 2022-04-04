@@ -36,7 +36,7 @@ using namespace std;
  */
 
 //write  training dataset words map  to the wordmapfile
-int dataset::write_wordmap(const string &wordmapfile, mapword2id *pword2id) {
+int dataset::write_wordmap(const string &wordmapfile, mapword2id *pword2id)
 {
 	FILE *fout = fopen(wordmapfile.c_str(), "w");
      if (!fout)
@@ -46,7 +46,7 @@ int dataset::write_wordmap(const string &wordmapfile, mapword2id *pword2id) {
     }
 
 	mapword2id::iterator it;
-    fprintf("Wordmap size: %zu\n", pword2id->size());    // debug output
+    printf("Wordmap size: %zu\n", pword2id->size());    // debug output
 	fprintf(fout, "%zu\n", pword2id->size());
      for(it = pword2id->begin(); it != pword2id->end(); it++) 
 	{
@@ -58,7 +58,7 @@ int dataset::write_wordmap(const string &wordmapfile, mapword2id *pword2id) {
 	return 0;
 }
 
-int dataset::read_wordmap(const string &wordmapfile, mapword2id *pword2id) {
+int dataset::read_wordmap(const string &wordmapfile, mapword2id *pword2id)
 {
 	pword2id->clear();
 
@@ -99,7 +99,7 @@ int dataset::read_wordmap(const string &wordmapfile, mapword2id *pword2id) {
 
 
 
-int dataset::read_wordmap(const string &wordmapfile, mapid2word *pid2word) {
+int dataset::read_wordmap(const string &wordmapfile, mapid2word *pid2word)
 {
     pid2word->clear();
     
@@ -136,8 +136,8 @@ int dataset::read_wordmap(const string &wordmapfile, mapid2word *pid2word) {
 }
 
 
-//read training dataset...
-int dataset::read_trndata(const string &dfile, const string &wordmapfile) {
+// read training dataset...
+int dataset::read_trndata(const string &dfile, const string &wordmapfile)
 {
     mapword2id word2id;
     
@@ -167,6 +167,8 @@ int dataset::read_trndata(const string &dfile, const string &wordmapfile) {
     } else {
 		docs = new document*[M];
     }
+#else
+	clear();
 #endif	
 
 	// set number of words to zero
@@ -197,7 +199,7 @@ int dataset::read_trndata(const string &dfile, const string &wordmapfile) {
 			if (it == word2id.end()) {
 				// word not found, i.e., new word, add to vocabulary, set its id to vocabulary size
 				pdoc.words[j] = word2id.size();
-				word2id.insert(pair<string, int>(strtok.token(j), word2id.size()));
+				word2id.insert(pair<string, int>(strtok.token(j), (int)word2id.size()));
 			} else {
 				// existing word, set its id in map
 				pdoc.words[j] = it->second;
@@ -208,17 +210,20 @@ int dataset::read_trndata(const string &dfile, const string &wordmapfile) {
 		add_doc(pdoc, i);
 	}
 
-    if (docs.size() > 0)
+	fclose(fin);
+
+	if (docs.size() > 0)
 	{
-      file_names.push_back(dir+"data_"+std::to_string(cur_index)+".data");
+#ifdef HAVE_BOOST
+		file_names.push_back(dir+"data_"+std::to_string(cur_index)+".data");
       write_to_disk(cur_index);
       docs.clear();
       cur_size = 0;
       cur_index++; 
-    }
+#else
+#endif
+	}
     
-	fclose(fin);
-
 	// write word map to file
 	if (write_wordmap(wordmapfile, &word2id)) 
 	{
@@ -238,7 +243,7 @@ int dataset::read_newdata(const string &dfile, const string &wordmapfile)
 	map<int, int> id2_id;
 
 	//1.load wordmapfile trained in etc model to memory. and push the data to the structure of map<string,int> word2id.
-	//this map is used to check whether the word in  unseen data is also have exsited in before training data .
+	//this map is used to check whether the word in unseen data is also have existed in before training data .
 	read_wordmap(wordmapfile, &word2id);
 	if (word2id.empty())
 	{
@@ -270,7 +275,8 @@ int dataset::read_newdata(const string &dfile, const string &wordmapfile)
 	}
 
 	// allocate memory for corpus
-    if (docs) 
+#if 0
+	if (docs) 
 	{
 		deallocate();
     } 
@@ -278,6 +284,9 @@ int dataset::read_newdata(const string &dfile, const string &wordmapfile)
 	{
 		docs = new document *[M];
 	}
+#else
+	clear();
+#endif
 	_docs = new document *[M];
 
 	// set number of words to zero
@@ -320,7 +329,7 @@ int dataset::read_newdata(const string &dfile, const string &wordmapfile)
 		}//for end...
 
 		// allocate memory for new doc
-		auto *pdoc = new document(doc);
+		document pdoc = document(doc);
 		auto *_pdoc = new document(_doc);
 
 		// add new doc

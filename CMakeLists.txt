@@ -4,20 +4,20 @@ project(GibbsLDA)
 set(LIBRARY_NAME Gibbslda)
 
 set(CMAKE_CXX_STANDARD 17)
-add_definitions(-Wno-unused-result)
-include_directories(src)
+#add_definitions(-Wno-unused-result)
+include_directories(include)
 
 set(SRCS 
-        src/constants.h
+        include/constants.h
         src/dataset.cpp
-        src/dataset.h
+        include/dataset.h
         src/lda.cpp
         src/model.cpp
-        src/model.h
+        include/model.h
         src/strtokenizer.cpp
-        src/strtokenizer.h
+        include/strtokenizer.h
         src/utils.cpp
-        src/utils.h)
+        include/utils.h)
 
 add_executable(gibbslda ${SRCS})
 

@@ -2,7 +2,26 @@
 
 my fork of GibbsLDA++: A C/C++ Implementation of Latent Dirichlet Allocation by by Xuan-Hieu Phan and Cam-Tu Nguyen. Original page: http://gibbslda.sourceforge.net/
 
-`****************************************************************************`
+----------------------------------------------------------------------
+
+The original code was Modified to be fit into large data, which can not be loaded into memory once.
+The solution is to upload the parameters relates to the size of the data from disk and download them back when not needed.This may not be efficient, but at least works.
+
+Dependencies:
+
+    boost_serialization
+
+How to compile:
+
+    mkdir build && cd build
+    cmake ..
+    make
+
+How to run the model is the same to the original one.
+
+ 
+-----------------------------------original file----------------------------
+****************************************************************************
 
                               GibbsLDA++
        A C/C++ Implementation of Latent Dirichlet Allocation (LDA)
@@ -16,7 +35,13 @@ my fork of GibbsLDA++: A C/C++ Implementation of Latent Dirichlet Allocation by 
                 Graduate School of Information Sciences
                           Tohoku University
 
-`****************************************************************************`
+                Performance optimizations implemented by
+                          Robert Sinkovits 
+                          sinkovit@sdsc.edu
+                     San Diego Supercomputer Center
+                  University of California, San Diego
+
+****************************************************************************
 
 
 # TABLE OF CONTENTS
@@ -103,6 +128,10 @@ my fork of GibbsLDA++: A C/C++ Implementation of Latent Dirichlet Allocation by 
 
   You can find and download document, source code, and case studies of
   GibbsLDA++ at:
+
+  * https://github.com/sinkovit/GibbsLDAPlusPlus
+
+  Previous releases available at:
 
   * http://gibbslda.sourceforge.net/
   * http://sourceforge.net/projects/gibbslda
@@ -319,7 +348,7 @@ liter=? # i.e., the Gibbs sampling iteration at which the model was saved)
 + <model_name>.phi:
 This file contains the word-topic distributions,
 i.e., p(word_w | topic_t). 
-Each line is a topic, each column is a word in the vocabulary
+Each line is a topic, each column is a word in the vocabulary.
 
 + <model_name>.theta:
 This file contains the topic-document distributions,
@@ -408,6 +437,8 @@ integer IDs of words/terms inside instead of text strings.
   - LDA package (using Variational Methods, including C and Matlab):
     http://chasen.org/~daiti-m/dist/lda/
 
+  - The Hitchhiker's Guide to LDA
+    https://arxiv.org/abs/1908.03142
 
 ## 4.2. References
 

@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 }
 
 void show_help() {
-	printf("GibbsLDA++ v3.0 build 20191019-1503\n");
+	printf("GibbsLDA++ v3.0 build 20220404-1504\n");
 	printf("Command line usage:\n");
 	printf("\tlda -est -alpha <double> -beta <double> -ntopics <int> -niters <int> -savestep <int> -twords <int> -dfile <string>\n");
 	printf("\tlda -estc -dir <string> -model <string> -niters <int> -savestep <int> -twords <int>\n");
