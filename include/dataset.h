@@ -68,7 +68,7 @@ public:
 #endif
 
     string rawstr;
-	int length   ; //the length of words in  one document
+	int length   ; // the length of words in one document
     
     document() : words() {
 		//words = mullptr;
@@ -117,7 +117,7 @@ public:
     vector<int> start_index;
     vector<document> docs;
     document ** _docs; // used only for inference
-	map<int, int> _id2id;   // also used only for inference,  _id:increment word index for unseen dataset£¬id:increment word index in train dataset.
+	map<int, int> _id2id;   // also used only for inference,  _id:increment word index for unseen dataset,  id:increment word index in train dataset.
     int M; // number of documents
     int V; // number of words
     int cur_size;
